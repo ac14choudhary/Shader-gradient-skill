@@ -35,6 +35,8 @@ test("server-renders the shader atlas shell", async () => {
   assert.match(html, /Beautiful Shader Skill Atlas/);
   assert.match(html, /Readable gradients with living motion/);
   assert.match(html, /Shader atlas controls/);
+  assert.match(html, /Readable hero presets/);
+  assert.match(html, /The first two presets, properly showcased/);
   assert.match(html, /Switch to dark mode/);
   assert.match(html, /BS-001/);
   assert.match(html, /BS-018/);
@@ -56,6 +58,9 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(page, /uRipplePos\[6\]/);
   assert.match(page, /prefers-reduced-motion: reduce/);
   assert.match(page, /const docSections/);
+  assert.match(page, /const heroExample/);
+  assert.match(page, /IntersectionObserver/);
+  assert.match(page, /WEBGL_lose_context/);
   assert.match(page, /ThemeToggle/);
   assert.match(page, /setActiveCategory/);
   assert.match(layout, /title:\s*"Beautiful Shader Atlas"/);

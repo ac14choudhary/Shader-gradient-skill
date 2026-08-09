@@ -377,6 +377,26 @@ const examples: ShaderExample[] = [
   },
 ];
 
+const heroExample: ShaderExample = {
+  id: "BS-HERO",
+  title: "Aurora Reading Field",
+  category: "Hero",
+  base: "full-coverage",
+  palette: 0,
+  density: "wide",
+  mood: "cinematic calm",
+  grain: "subtle",
+  interaction: 0,
+  scale: 0.78,
+  warp: 2.25,
+  speed: 0.72,
+  hue: 0.026,
+  octaves: 4,
+  grainStrength: 0.022,
+  summary: "A richer aurora field with enough movement to feel alive and enough shadow structure to keep type readable.",
+  use: "Primary site hero background.",
+};
+
 const categories: Array<Category | "All"> = [
   "All",
   "Hero",
@@ -465,10 +485,24 @@ function modeToUniform(mode: BaseMode) {
 
 function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isVisible, setIsVisible] = useState(hero);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || hero) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: "360px 0px" },
+    );
+    observer.observe(canvas);
+
+    return () => observer.disconnect();
+  }, [hero]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !isVisible) return;
     const gl = canvas.getContext("webgl2", {
       antialias: false,
       alpha: example.base === "overlay",
@@ -604,8 +638,9 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
       canvas.removeEventListener("pointermove", updatePointer);
       canvas.removeEventListener("pointerdown", addRipple);
       gl.deleteProgram(program);
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [example, hero]);
+  }, [example, hero, isVisible]);
 
   return (
     <canvas
@@ -853,7 +888,8 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
   const [theme, setTheme] = useState<Theme>("light");
-  const featured = examples[0];
+  const featured = heroExample;
+  const readablePresets = examples.slice(0, 2);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("shader-atlas-theme");
@@ -922,6 +958,22 @@ export default function Home() {
           <strong>{featured.title}</strong>
           <p>{featured.summary}</p>
         </aside>
+      </section>
+
+      <section className="featured-presets" aria-label="Featured readable shader presets">
+        <div className="featured-copy">
+          <p className="eyebrow">Readable hero presets</p>
+          <h2>The first two presets, properly showcased.</h2>
+          <p>
+            These are the practical hero modes: one dark, one light. They get larger previews
+            because they are the presets people are most likely to reuse.
+          </p>
+        </div>
+        <div className="featured-grid">
+          {readablePresets.map((example) => (
+            <ExampleCard key={example.id} example={example} />
+          ))}
+        </div>
       </section>
 
       <section className="overview" aria-label="Showcase overview">
