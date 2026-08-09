@@ -37,20 +37,32 @@ It documents reusable preset IDs, base modes, palette choices, interaction modes
 the practical layout lessons that only show up once several shaders are rendered on one
 page.
 
+## Repository structure
+
+```text
+skills/beautiful-shader/SKILL.md  # folder-based Codex skill
+beautiful-shader.md               # legacy single-file skill mirror
+app/                              # live Beautiful Shader Atlas website
+```
+
+Use the folder skill for Codex or any harness that expects a skill directory. The
+top-level `beautiful-shader.md` remains for tools that install a single markdown file.
+
 ## Install
 
-Claude Code skills are just markdown files. Drop this one into your skills folder:
+For Codex-style folder skills, copy the folder:
+
+```bash
+git clone https://github.com/ac14choudhary/Shader-gradient-skill.git
+mkdir -p ~/.codex/skills
+cp -R Shader-gradient-skill/skills/beautiful-shader ~/.codex/skills/
+```
+
+For Claude Code-style single-file skills, use the legacy markdown mirror:
 
 ```bash
 curl -o ~/.claude/skills/beautiful-shader.md \
   https://raw.githubusercontent.com/ac14choudhary/Shader-gradient-skill/main/beautiful-shader.md
-```
-
-Or clone the repo and copy it manually:
-
-```bash
-git clone https://github.com/ac14choudhary/Shader-gradient-skill.git
-cp Shader-gradient-skill/beautiful-shader.md ~/.claude/skills/
 ```
 
 No other setup — the skill is fully self-contained, no external assets or packages.

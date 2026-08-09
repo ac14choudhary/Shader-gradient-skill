@@ -79,11 +79,12 @@ test("server-renders individual atlas pages", async () => {
 });
 
 test("keeps the atlas self-contained and starter-free", async () => {
-  const [page, atlas, layout, packageJson] = await Promise.all([
+  const [page, atlas, layout, packageJson, skill] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/shader-atlas.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../skills/beautiful-shader/SKILL.md", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /view="home"/);
@@ -107,6 +108,9 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(atlas, /gradientPrompt/);
   assert.match(atlas, /data-tooltip/);
   assert.match(layout, /title:\s*"Beautiful Shader Atlas"/);
+  assert.match(skill, /^---\nname: beautiful-shader\n/m);
+  assert.match(skill, /description: Create beautiful WebGL2\/GLSL flowing gradient shaders/);
+  assert.match(skill, /# beautiful-shader/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.doesNotMatch(page + atlas + layout, /codex-preview|_sites-preview|Starter Project/);
 
