@@ -100,6 +100,12 @@ main {
   color: var(--ink);
 }
 
+.primary-nav a.is-active,
+.primary-nav a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 760;
+}
+
 .theme-toggle {
   min-height: 34px;
   display: inline-flex;
@@ -266,6 +272,10 @@ h1 {
   gap: clamp(24px, 6vw, 90px);
   align-items: end;
   padding: clamp(56px, 8vw, 110px) 24px 28px;
+}
+
+.page-intro:first-of-type {
+  border-top: 0;
 }
 
 .gallery-intro h2,
