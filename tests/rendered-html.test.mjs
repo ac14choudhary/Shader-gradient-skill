@@ -60,7 +60,7 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(page, /const heroExample/);
   assert.match(page, /const useCaseSections/);
   assert.match(page, /IntersectionObserver/);
-  assert.match(page, /WEBGL_lose_context/);
+  assert.doesNotMatch(page, /WEBGL_lose_context|loseContext/);
   assert.match(page, /ThemeToggle/);
   assert.match(page, /builderExample/);
   assert.match(page, /LLM harness/);

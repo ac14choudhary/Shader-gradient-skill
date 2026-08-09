@@ -533,8 +533,13 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
     if (!canvas || hero) return;
 
     const observer = new IntersectionObserver(
-      ([entry]) => setIsVisible(entry.isIntersecting),
-      { rootMargin: "360px 0px" },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "480px 0px" },
     );
     observer.observe(canvas);
 
@@ -679,7 +684,6 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
       canvas.removeEventListener("pointermove", updatePointer);
       canvas.removeEventListener("pointerdown", addRipple);
       gl.deleteProgram(program);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [example, hero, isVisible]);
 
