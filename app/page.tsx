@@ -10,6 +10,7 @@ type Category =
   | "Interaction"
   | "Texture"
   | "Utility";
+type Theme = "light" | "dark";
 
 type ShaderExample = {
   id: string;
@@ -410,6 +411,51 @@ const modules = [
   ["Palette", "BS-MOD-PALETTE", "Named cosine palettes or future custom color stops are driven by the warped field."],
 ];
 
+const docSections = [
+  {
+    id: "BS-DOC-001",
+    label: "Foundation",
+    title: "Base modes define the reading environment.",
+    lead: "Pick the compositing mode before touching colors. Full coverage is for artwork, dark and light primary modes are for UI, and overlay mode lets another surface own the background.",
+    notes: ["Mode A fills the frame.", "Mode B lets color bleed through darkness.", "Mode C keeps an off-white base readable.", "Overlay exports alpha from the flow mask."],
+  },
+  {
+    id: "BS-DOC-002",
+    label: "Shape",
+    title: "Density and energy are separate controls.",
+    lead: "Density changes UV scale and octave count. Energy changes warp amount, speed, and hue drift. Keeping those separate makes calm-tight and wide-cinematic gradients possible.",
+    notes: ["Wide: 0.35-0.5 scale.", "Balanced: 0.7-1.0 scale.", "Tight: 1.2-1.6 scale.", "Reduce octaves before reducing color."],
+  },
+  {
+    id: "BS-DOC-003",
+    label: "Color",
+    title: "Palette follows the warped field, not the screen.",
+    lead: "Color should be driven by f, q, and r from the domain warp. Hue drift belongs in palette phase so the color changes in place instead of sliding across the canvas.",
+    notes: ["Aurora: default cool range.", "Sunset: warm product tone.", "Ocean: calm low swing.", "Neon: best full-frame.", "Monochrome: brightness-led."],
+  },
+  {
+    id: "BS-DOC-004",
+    label: "Input",
+    title: "Interaction should bend the domain.",
+    lead: "Pointer modes feel natural when they alter the field before color is computed. Follow and repel are mutually exclusive, ripple is event-based, and hover turbulence can stack.",
+    notes: ["Smooth pointer input.", "Clamp repel displacement.", "Limit ripples to six.", "Use hover turbulence for local intensity."],
+  },
+  {
+    id: "BS-DOC-005",
+    label: "Texture",
+    title: "Dither and grain solve different problems.",
+    lead: "Dither is a nearly invisible anti-banding fix. Visible grain is a style decision for analog, film, or gallery briefs and should stay away from clean product UI unless requested.",
+    notes: ["Dither: almost always safe.", "Subtle grain: 0.05.", "Moderate grain: 0.12-0.15.", "Increase grain size before strength."],
+  },
+  {
+    id: "BS-DOC-006",
+    label: "Ship",
+    title: "The checklist keeps the shader from feeling accidental.",
+    lead: "The render loop needs bounded time, clamped delta, capped DPR, reduced-motion handling, rotated fBm octaves, clamped vignette, tonemapping, and sRGB output.",
+    notes: ["Cap DPR at 2.", "Clamp dt to 1/30.", "Bound time modulo 3600.", "Render one frame for reduced motion.", "Tonemap before encode."],
+  },
+];
+
 function modeToUniform(mode: BaseMode) {
   if (mode === "full-coverage") return 0;
   if (mode === "dark-accent") return 1;
@@ -787,9 +833,41 @@ function ExampleCard({ example }: { example: ShaderExample }) {
   );
 }
 
+function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={onToggle}
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      aria-pressed={theme === "dark"}
+    >
+      <span aria-hidden="true" />
+      {theme === "dark" ? "Dark" : "Light"}
+    </button>
+  );
+}
+
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
-  const featured = examples[2];
+  const [theme, setTheme] = useState<Theme>("light");
+  const featured = examples[0];
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("shader-atlas-theme");
+    const nextTheme =
+      saved === "dark" || saved === "light"
+        ? saved
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+    setTheme(nextTheme);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("shader-atlas-theme", theme);
+  }, [theme]);
 
   const filteredExamples = useMemo(() => {
     if (activeCategory === "All") return examples;
@@ -798,14 +876,39 @@ export default function Home() {
 
   return (
     <main>
+      <header className="site-toolbar" aria-label="Shader atlas controls">
+        <a href="#" className="brand-mark" aria-label="Beautiful Shader Atlas home">
+          Beautiful Shader
+        </a>
+        <nav className="category-nav" aria-label="Filter shader examples">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              className={activeCategory === category ? "active" : ""}
+              onClick={() => {
+                setActiveCategory(category);
+                document.getElementById("atlas")?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              {category}
+            </button>
+          ))}
+        </nav>
+        <ThemeToggle
+          theme={theme}
+          onToggle={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+        />
+      </header>
+
       <section className="hero">
         <ShaderCanvas example={featured} hero />
         <div className="hero-content">
           <p className="eyebrow">Beautiful Shader Skill Atlas</p>
-          <h1>Live WebGL gradient presets, modules, and IDs for every useful shader brief.</h1>
+          <h1>Readable gradients with living motion.</h1>
           <p>
-            A showcase for the flowing-gradient skill: base modes, density, palettes, grain,
-            interaction, and purpose-built examples rendered from one shared domain-warped GLSL core.
+            A curated atlas for the flowing-gradient skill: calmer hero backgrounds,
+            reusable preset IDs, and documented shader ingredients that work behind real text.
           </p>
           <div className="hero-actions" aria-label="Primary page sections">
             <a href="#atlas">Browse examples</a>
@@ -838,19 +941,6 @@ export default function Home() {
         </p>
       </section>
 
-      <div className="filters" aria-label="Filter shader examples">
-        {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className={activeCategory === category ? "active" : ""}
-            onClick={() => setActiveCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
-      </div>
-
       <section className="atlas-grid" aria-live="polite">
         {filteredExamples.map((example) => (
           <ExampleCard key={example.id} example={example} />
@@ -866,59 +956,24 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="docs-grid">
-        <article>
-          <span>BS-DOC-001</span>
-          <h3>Base modes</h3>
-          <p>
-            Use full coverage when the shader is content. Use dark or light primary modes
-            when text or UI must stay readable. Use overlay when another surface owns the
-            background and the shader should contribute alpha only.
-          </p>
-        </article>
-        <article>
-          <span>BS-DOC-002</span>
-          <h3>Density and energy</h3>
-          <p>
-            Density moves UV scale and octaves. Energy moves warp amount, motion, and hue
-            drift. Keeping those axes separate is what makes "wide but cinematic" or
-            "tight but quiet" possible.
-          </p>
-        </article>
-        <article>
-          <span>BS-DOC-003</span>
-          <h3>Palette behavior</h3>
-          <p>
-            Color comes from the warped field, not raw screen position. Hue drift changes
-            the palette phase in place, avoiding the sliding wallpaper look.
-          </p>
-        </article>
-        <article>
-          <span>BS-DOC-004</span>
-          <h3>Interaction stack</h3>
-          <p>
-            Pointer modes operate on the shader domain. Follow and repel are alternatives,
-            ripple is event-based, and hover turbulence can stack because it changes local
-            warp instead of position.
-          </p>
-        </article>
-        <article>
-          <span>BS-DOC-005</span>
-          <h3>Grain rules</h3>
-          <p>
-            Dither belongs almost everywhere because it prevents banding. Visible grain is
-            reserved for art, film, or analog briefs, and should be controlled by density
-            before strength.
-          </p>
-        </article>
-        <article>
-          <span>BS-DOC-006</span>
-          <h3>Ship checklist</h3>
-          <p>
-            Cap device pixel ratio, clamp delta time, bound elapsed time, respect reduced
-            motion, clamp vignettes, rotate fBm octaves, and tonemap before sRGB output.
-          </p>
-        </article>
+      <section className="docs-stack">
+        {docSections.map((section) => (
+          <article key={section.id} className="doc-row">
+            <div className="doc-meta">
+              <span>{section.id}</span>
+              <p>{section.label}</p>
+            </div>
+            <div className="doc-copy">
+              <h3>{section.title}</h3>
+              <p>{section.lead}</p>
+            </div>
+            <ul>
+              {section.notes.map((note) => (
+                <li key={note}>{note}</li>
+              ))}
+            </ul>
+          </article>
+        ))}
       </section>
 
       <section className="package-note">

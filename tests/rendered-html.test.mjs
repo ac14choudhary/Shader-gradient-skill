@@ -33,7 +33,9 @@ test("server-renders the shader atlas shell", async () => {
   const html = await response.text();
   assert.match(html, /<title>Beautiful Shader Atlas<\/title>/i);
   assert.match(html, /Beautiful Shader Skill Atlas/);
-  assert.match(html, /Live WebGL gradient presets/);
+  assert.match(html, /Readable gradients with living motion/);
+  assert.match(html, /Shader atlas controls/);
+  assert.match(html, /Switch to dark mode/);
   assert.match(html, /BS-001/);
   assert.match(html, /BS-018/);
   assert.match(html, /BS-MOD-INTERACTION/);
@@ -53,6 +55,9 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(page, /BS-015/);
   assert.match(page, /uRipplePos\[6\]/);
   assert.match(page, /prefers-reduced-motion: reduce/);
+  assert.match(page, /const docSections/);
+  assert.match(page, /ThemeToggle/);
+  assert.match(page, /setActiveCategory/);
   assert.match(layout, /title:\s*"Beautiful Shader Atlas"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.doesNotMatch(page + layout, /codex-preview|_sites-preview|Starter Project/);
