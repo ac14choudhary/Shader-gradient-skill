@@ -32,15 +32,14 @@ test("server-renders the shader atlas shell", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Beautiful Shader Atlas<\/title>/i);
-  assert.match(html, /Beautiful Shader Skill Atlas/);
-  assert.match(html, /Readable gradients with living motion/);
-  assert.match(html, /Shader atlas controls/);
-  assert.match(html, /Readable hero presets/);
-  assert.match(html, /The first two presets, properly showcased/);
+  assert.match(html, /Gallery-first shader skill/);
+  assert.match(html, /WebGL gradient recipes for any LLM harness/);
+  assert.match(html, /Start with the shader you can see yourself using/);
+  assert.match(html, /Use it with any LLM or coding harness/);
+  assert.match(html, /Make your own gradient recipe/);
   assert.match(html, /Switch to dark mode/);
   assert.match(html, /BS-001/);
   assert.match(html, /BS-018/);
-  assert.match(html, /BS-MOD-INTERACTION/);
   assert.match(html, /BS-DOC-006/);
   assert.match(html, /GradientCanvas/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
@@ -59,10 +58,12 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(page, /prefers-reduced-motion: reduce/);
   assert.match(page, /const docSections/);
   assert.match(page, /const heroExample/);
+  assert.match(page, /const useCaseSections/);
   assert.match(page, /IntersectionObserver/);
   assert.match(page, /WEBGL_lose_context/);
   assert.match(page, /ThemeToggle/);
-  assert.match(page, /setActiveCategory/);
+  assert.match(page, /builderExample/);
+  assert.match(page, /LLM harness/);
   assert.match(layout, /title:\s*"Beautiful Shader Atlas"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.doesNotMatch(page + layout, /codex-preview|_sites-preview|Starter Project/);

@@ -407,6 +407,47 @@ const categories: Array<Category | "All"> = [
   "Utility",
 ];
 
+const navItems = [
+  ["Gallery", "#gallery"],
+  ["Use Cases", "#use-cases"],
+  ["Builder", "#builder"],
+  ["Code", "#code"],
+  ["Docs", "#docs"],
+];
+
+const useCaseSections: Array<{ category: Category; title: string; copy: string }> = [
+  {
+    category: "Hero",
+    title: "Hero backgrounds",
+    copy: "Readable, atmospheric shaders for landing pages, product intros, and editorial sections.",
+  },
+  {
+    category: "UI",
+    title: "UI surfaces",
+    copy: "Contained shader accents for cards, dashboards, panels, and product interfaces.",
+  },
+  {
+    category: "Art",
+    title: "Generative art",
+    copy: "Full-field presets where the shader is the content, not just a background.",
+  },
+  {
+    category: "Interaction",
+    title: "Interactive shaders",
+    copy: "Pointer follow, repel, click ripple, and hover turbulence modes for playful surfaces.",
+  },
+  {
+    category: "Texture",
+    title: "Texture and grain",
+    copy: "Analog and cinematic variations where visible grain is a deliberate creative choice.",
+  },
+  {
+    category: "Utility",
+    title: "Utility overlays",
+    copy: "Loading pulses, transparent overlays, and low-band gradients for functional contexts.",
+  },
+];
+
 const baseModeLabel: Record<BaseMode, string> = {
   "dark-accent": "Mode B: dark primary",
   "light-accent": "Mode C: light primary",
@@ -886,10 +927,16 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
 }
 
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
   const [theme, setTheme] = useState<Theme>("light");
+  const [builderBase, setBuilderBase] = useState<BaseMode>("dark-accent");
+  const [builderPalette, setBuilderPalette] = useState(0);
+  const [builderScale, setBuilderScale] = useState(0.75);
+  const [builderWarp, setBuilderWarp] = useState(1.7);
+  const [builderSpeed, setBuilderSpeed] = useState(0.7);
+  const [builderGrain, setBuilderGrain] = useState(0.02);
   const featured = heroExample;
   const readablePresets = examples.slice(0, 2);
+  const galleryExamples = examples.slice(0, 9);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("shader-atlas-theme");
@@ -907,30 +954,40 @@ export default function Home() {
     window.localStorage.setItem("shader-atlas-theme", theme);
   }, [theme]);
 
-  const filteredExamples = useMemo(() => {
-    if (activeCategory === "All") return examples;
-    return examples.filter((example) => example.category === activeCategory);
-  }, [activeCategory]);
+  const builderExample = useMemo<ShaderExample>(
+    () => ({
+      id: "CUSTOM-001",
+      title: "Custom Builder Preview",
+      category: "Utility",
+      base: builderBase,
+      palette: builderPalette,
+      density: builderScale < 0.6 ? "wide" : builderScale > 1.05 ? "tight" : "balanced",
+      mood: builderWarp > 2.2 ? "energetic" : "calm",
+      grain: builderGrain > 0.08 ? "moderate" : builderGrain > 0 ? "subtle" : "none",
+      interaction: 0,
+      scale: builderScale,
+      warp: builderWarp,
+      speed: builderSpeed,
+      hue: 0.018 + builderSpeed * 0.012,
+      octaves: builderScale > 1.05 ? 4 : 3,
+      grainStrength: builderGrain,
+      summary: "Live preview generated from the controls.",
+      use: "Copy the config, then ask the skill or any LLM harness to generate the shader.",
+    }),
+    [builderBase, builderPalette, builderScale, builderWarp, builderSpeed, builderGrain],
+  );
 
   return (
     <main>
-      <header className="site-toolbar" aria-label="Shader atlas controls">
+      <header className="site-toolbar" aria-label="Primary navigation">
         <a href="#" className="brand-mark" aria-label="Beautiful Shader Atlas home">
           Beautiful Shader
         </a>
-        <nav className="category-nav" aria-label="Filter shader examples">
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className={activeCategory === category ? "active" : ""}
-              onClick={() => {
-                setActiveCategory(category);
-                document.getElementById("atlas")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              {category}
-            </button>
+        <nav className="primary-nav" aria-label="Site sections">
+          {navItems.map(([label, href]) => (
+            <a key={href} href={href}>
+              {label}
+            </a>
           ))}
         </nav>
         <ThemeToggle
@@ -942,15 +999,16 @@ export default function Home() {
       <section className="hero">
         <ShaderCanvas example={featured} hero />
         <div className="hero-content">
-          <p className="eyebrow">Beautiful Shader Skill Atlas</p>
-          <h1>Readable gradients with living motion.</h1>
+          <p className="eyebrow">Gallery-first shader skill</p>
+          <h1>WebGL gradient recipes for any LLM harness.</h1>
           <p>
-            A curated atlas for the flowing-gradient skill: calmer hero backgrounds,
-            reusable preset IDs, and documented shader ingredients that work behind real text.
+            Browse real examples, learn when to use each shader, tune your own version,
+            then copy a preset config into the beautiful-shader skill from Claude Code,
+            Codex, ChatGPT, or any agentic coding harness.
           </p>
           <div className="hero-actions" aria-label="Primary page sections">
-            <a href="#atlas">Browse examples</a>
-            <a href="#modules">Read modules</a>
+            <a href="#gallery">Explore gallery</a>
+            <a href="#builder">Make your own</a>
           </div>
         </div>
         <aside className="hero-panel" aria-label="Featured shader">
@@ -960,53 +1018,133 @@ export default function Home() {
         </aside>
       </section>
 
-      <section className="featured-presets" aria-label="Featured readable shader presets">
-        <div className="featured-copy">
-          <p className="eyebrow">Readable hero presets</p>
-          <h2>The first two presets, properly showcased.</h2>
-          <p>
-            These are the practical hero modes: one dark, one light. They get larger previews
-            because they are the presets people are most likely to reuse.
-          </p>
+      <section className="gallery-intro" id="gallery">
+        <div>
+          <p className="eyebrow">Gallery</p>
+          <h2>Start with the shader you can see yourself using.</h2>
         </div>
-        <div className="featured-grid">
-          {readablePresets.map((example) => (
-            <ExampleCard key={example.id} example={example} />
-          ))}
-        </div>
+        <p>
+          The gallery is intentionally visual first. Each preset has an ID, a use case,
+          and a short reason to choose it.
+        </p>
       </section>
 
-      <section className="overview" aria-label="Showcase overview">
-        {modules.map(([name, id, copy]) => (
-          <div key={id} className="overview-item">
-            <span>{id}</span>
-            <h2>{name}</h2>
-            <p>{copy}</p>
+      <section className="gallery-wall" aria-label="Shader preset gallery">
+        {galleryExamples.map((example, index) => (
+          <div className={index < 2 ? "gallery-featured" : ""} key={example.id}>
+            <ExampleCard key={example.id} example={example} />
           </div>
         ))}
       </section>
 
-      <section className="section-heading" id="atlas">
-        <p className="eyebrow">Preset atlas</p>
-        <h2>Every example is a reusable recipe.</h2>
+      <section className="skill-note" aria-label="Skill compatibility">
+        <p className="eyebrow">Skill, not just package</p>
+        <h2>Use it with any LLM or coding harness.</h2>
         <p>
-          The IDs are intentionally stable. A future npm package or skill update can expose
-          them as named presets while keeping the rendering core shared.
+          The presets and docs are written as portable instructions: paste a preset ID,
+          the desired use case, and any changes into the beautiful-shader skill. It can
+          guide Claude Code, Codex, ChatGPT, or another harness that can edit WebGL/GLSL.
         </p>
       </section>
 
-      <section className="atlas-grid" aria-live="polite">
-        {filteredExamples.map((example) => (
-          <ExampleCard key={example.id} example={example} />
+      <section className="section-heading" id="use-cases">
+        <p className="eyebrow">Use cases</p>
+        <h2>Examples grouped by where they belong.</h2>
+      </section>
+
+      <section className="use-case-stack">
+        {useCaseSections.map((section) => (
+          <article className="use-case-row" key={section.category}>
+            <div className="use-case-copy">
+              <p className="eyebrow">{section.category}</p>
+              <h3>{section.title}</h3>
+              <p>{section.copy}</p>
+            </div>
+            <div className="use-case-examples">
+              {examples
+                .filter((example) => example.category === section.category)
+                .slice(0, 3)
+                .map((example) => (
+                  <ExampleCard key={example.id} example={example} />
+                ))}
+            </div>
+          </article>
         ))}
       </section>
 
-      <section className="section-heading" id="modules">
-        <p className="eyebrow">Module documentation</p>
-        <h2>How the ingredients fit together.</h2>
+      <section className="builder-section" id="builder">
+        <div className="builder-copy">
+          <p className="eyebrow">Builder</p>
+          <h2>Make your own gradient recipe.</h2>
+          <p>
+            Tune the core shader ingredients, then copy the config into the skill prompt
+            or use it as the shape for a future npm preset.
+          </p>
+        </div>
+        <div className="builder-preview">
+          <ShaderCanvas example={builderExample} />
+          <div className="id-pill">{builderExample.id}</div>
+        </div>
+        <form className="builder-controls">
+          <label>
+            Base mode
+            <select value={builderBase} onChange={(event) => setBuilderBase(event.target.value as BaseMode)}>
+              <option value="dark-accent">Dark accent</option>
+              <option value="light-accent">Light accent</option>
+              <option value="full-coverage">Full coverage</option>
+              <option value="overlay">Overlay</option>
+            </select>
+          </label>
+          <label>
+            Palette
+            <select value={builderPalette} onChange={(event) => setBuilderPalette(Number(event.target.value))}>
+              {palettes.map(([name], index) => (
+                <option key={name} value={index}>{name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Density <span>{builderScale.toFixed(2)}</span>
+            <input type="range" min="0.35" max="1.55" step="0.05" value={builderScale} onChange={(event) => setBuilderScale(Number(event.target.value))} />
+          </label>
+          <label>
+            Flow <span>{builderWarp.toFixed(2)}</span>
+            <input type="range" min="0.8" max="3.8" step="0.05" value={builderWarp} onChange={(event) => setBuilderWarp(Number(event.target.value))} />
+          </label>
+          <label>
+            Speed <span>{builderSpeed.toFixed(2)}</span>
+            <input type="range" min="0.25" max="1.5" step="0.05" value={builderSpeed} onChange={(event) => setBuilderSpeed(Number(event.target.value))} />
+          </label>
+          <label>
+            Grain <span>{builderGrain.toFixed(2)}</span>
+            <input type="range" min="0" max="0.16" step="0.01" value={builderGrain} onChange={(event) => setBuilderGrain(Number(event.target.value))} />
+          </label>
+        </form>
+      </section>
+
+      <section className="code-section" id="code">
+        <div>
+          <p className="eyebrow">Code and skill prompt</p>
+          <h2>Use presets as package config or as LLM instructions.</h2>
+        </div>
+        <pre>{`// Future npm shape
+import { GradientCanvas, presets } from "beautiful-shader";
+
+<GradientCanvas preset={presets["BS-001"]} />
+
+// Skill / harness prompt
+Use the beautiful-shader skill.
+Create a WebGL2 gradient using preset BS-001.
+Context: readable landing-page hero.
+Adjust: palette=${palettes[builderPalette][0]}, base=${builderBase}, density=${builderScale.toFixed(2)}, flow=${builderWarp.toFixed(2)}, grain=${builderGrain.toFixed(2)}.`}</pre>
+      </section>
+
+      <section className="section-heading" id="docs">
+        <p className="eyebrow">Docs</p>
+        <h2>How the shader ingredients fit together.</h2>
         <p>
-          These are the knobs the skill should expose first. They describe what changes,
-          why it matters, and where a user should start.
+          A compact reference for the skill, package, or any harness that needs to
+          generate the shader from instructions.
         </p>
       </section>
 
@@ -1031,13 +1169,7 @@ export default function Home() {
       </section>
 
       <section className="package-note">
-        <div>
-          <p className="eyebrow">Later npm shape</p>
-          <h2>Preset IDs can become package exports.</h2>
-        </div>
-        <pre>{`import { GradientCanvas, presets } from "beautiful-shader";
-
-<GradientCanvas preset={presets["BS-001"]} />`}</pre>
+        <p>Preset IDs are stable enough to become exports later, but useful today as plain-language skill inputs.</p>
       </section>
     </main>
   );
