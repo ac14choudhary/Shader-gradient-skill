@@ -42,11 +42,28 @@ page.
 ```text
 skills/beautiful-shader/SKILL.md  # folder-based Codex skill
 beautiful-shader.md               # legacy single-file skill mirror
+packages/beautiful-shader/         # NPM package workspace
 app/                              # live Beautiful Shader Atlas website
 ```
 
 Use the folder skill for Codex or any harness that expects a skill directory. The
 top-level `beautiful-shader.md` remains for tools that install a single markdown file.
+The package workspace starts with the stable recipe API: typed presets, palettes,
+flow-pattern metadata, and prompt/snippet helpers.
+
+## NPM package shape
+
+The package is structured to keep recipe data portable before renderer-specific code is
+added:
+
+```ts
+import { createShaderPrompt, presets } from "beautiful-shader";
+
+const prompt = createShaderPrompt(presets[0]);
+```
+
+Planned renderer exports can layer on top of the same recipe contract without changing
+preset IDs or the skill prompts.
 
 ## Install
 
