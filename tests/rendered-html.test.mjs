@@ -37,6 +37,13 @@ test("server-renders the shader atlas shell", async () => {
   assert.match(html, /Start with the shader you can see yourself using/);
   assert.match(html, /Use it with any LLM or coding harness/);
   assert.match(html, /Make your own gradient recipe/);
+  assert.match(html, /Flow pattern/);
+  assert.match(html, /Primary color/);
+  assert.match(html, /Secondary color/);
+  assert.match(html, /Tertiary color/);
+  assert.match(html, /Background color/);
+  assert.match(html, /Add grain/);
+  assert.match(html, /Export recipe/);
   assert.match(html, /Switch to dark mode/);
   assert.match(html, /BS-001/);
   assert.match(html, /BS-018/);
@@ -64,6 +71,9 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(page, /ThemeToggle/);
   assert.match(page, /builderExample/);
   assert.match(page, /LLM harness/);
+  assert.match(page, /uFlowPattern/);
+  assert.match(page, /uUseCustomColors/);
+  assert.match(page, /navigator\.clipboard/);
   assert.match(layout, /title:\s*"Beautiful Shader Atlas"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.doesNotMatch(page + layout, /codex-preview|_sites-preview|Starter Project/);

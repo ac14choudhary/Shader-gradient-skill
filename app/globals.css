@@ -353,10 +353,17 @@ h1 {
 
 .builder-section {
   display: grid;
-  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 0.8fr) minmax(260px, 0.38fr);
+  grid-template-columns: minmax(360px, 0.62fr) minmax(0, 1fr);
+  grid-template-areas:
+    "copy controls"
+    "preview controls";
   gap: 1px;
   background: var(--line);
   border-block: 1px solid var(--line);
+}
+
+.builder-copy {
+  grid-area: copy;
 }
 
 .builder-copy,
@@ -372,41 +379,188 @@ h1 {
 }
 
 .builder-preview {
+  grid-area: preview;
+  align-self: start;
   position: relative;
+  width: 100%;
+  height: min(68vh, 620px);
   min-height: 540px;
   background: #050505;
 }
 
 .builder-controls {
+  grid-area: controls;
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: start;
-  gap: 18px;
+  gap: 14px;
 }
 
-.builder-controls label {
+.control-group {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+
+.control-group.wide,
+.export-panel {
+  grid-column: 1 / -1;
+}
+
+.control-group legend {
+  padding: 0 6px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.builder-controls label,
+.color-control {
   display: grid;
   gap: 8px;
   color: var(--muted);
   font-size: 0.88rem;
 }
 
-.builder-controls label span {
+.builder-controls label span,
+.control-note,
+.color-control code {
   color: var(--ink);
   font-family: var(--font-geist-mono), monospace;
 }
 
 .builder-controls select,
-.builder-controls input[type="range"] {
+.builder-controls input[type="range"],
+.builder-controls textarea {
   width: 100%;
+}
+
+.builder-controls select,
+.builder-controls textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .builder-controls select {
   min-height: 38px;
+  padding: 0 10px;
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.preset-button,
+.copy-button {
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 0 10px;
-  background: var(--paper);
+  background: var(--surface);
   color: var(--ink);
+  cursor: pointer;
+}
+
+.preset-button {
+  display: grid;
+  gap: 4px;
+  min-height: 58px;
+  padding: 10px;
+  text-align: left;
+  line-height: 1.18;
+}
+
+.preset-button span {
+  color: var(--coral);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+}
+
+.preset-button.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.preset-button.is-active span {
+  color: var(--green);
+}
+
+.control-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.color-control {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--surface);
+}
+
+.color-control input[type="color"] {
+  width: 100%;
+  height: 42px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-control code {
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+}
+
+.toggle-control {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.toggle-control input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+}
+
+.builder-controls input:disabled {
+  opacity: 0.42;
+}
+
+.export-panel textarea {
+  min-height: 190px;
+  resize: vertical;
+  padding: 12px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.copy-button {
+  min-height: 40px;
+  justify-self: start;
+  padding: 9px 13px;
+  background: var(--ink);
+  color: var(--paper);
 }
 
 .code-section {
@@ -610,6 +764,13 @@ pre {
     grid-template-columns: 1fr;
   }
 
+  .builder-section {
+    grid-template-areas:
+      "copy"
+      "preview"
+      "controls";
+  }
+
   .builder-preview {
     min-height: 460px;
   }
@@ -665,6 +826,12 @@ pre {
 
   .builder-preview {
     min-height: 360px;
+  }
+
+  .builder-controls,
+  .preset-grid,
+  .color-grid {
+    grid-template-columns: 1fr;
   }
 
   .doc-meta {

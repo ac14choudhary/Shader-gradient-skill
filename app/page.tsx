@@ -11,6 +11,14 @@ type Category =
   | "Texture"
   | "Utility";
 type Theme = "light" | "dark";
+type FlowPattern = "soft-fold" | "ribbon" | "cellular" | "storm" | "glass";
+
+type CustomColors = {
+  primary: string;
+  secondary: string;
+  tertiary: string;
+  background: string;
+};
 
 type ShaderExample = {
   id: string;
@@ -28,6 +36,8 @@ type ShaderExample = {
   hue: number;
   octaves: number;
   grainStrength: number;
+  flowPattern?: FlowPattern;
+  customColors?: CustomColors;
   summary: string;
   use: string;
 };
@@ -455,13 +465,43 @@ const baseModeLabel: Record<BaseMode, string> = {
   overlay: "Transparent overlay",
 };
 
-const palettes = [
-  ["Aurora", "Violet to teal, cool and ethereal."],
-  ["Sunset", "Coral and gold, warm without forcing a tech look."],
-  ["Ocean", "Blue and teal, calm with low saturation swing."],
-  ["Neon", "Magenta and cyan, high-energy and best full-frame."],
-  ["Monochrome", "Near grayscale, brightness-led and restrained."],
+const palettes: Array<{ name: string; description: string; colors: CustomColors }> = [
+  {
+    name: "Aurora",
+    description: "Violet to teal, cool and ethereal.",
+    colors: { primary: "#8b7dff", secondary: "#35d1c2", tertiary: "#c7ff8a", background: "#050509" },
+  },
+  {
+    name: "Sunset",
+    description: "Coral and gold, warm without forcing a tech look.",
+    colors: { primary: "#ff7a59", secondary: "#ffd36a", tertiary: "#8f5cff", background: "#130906" },
+  },
+  {
+    name: "Ocean",
+    description: "Blue and teal, calm with low saturation swing.",
+    colors: { primary: "#2d7ff9", secondary: "#20c7aa", tertiary: "#8fd6ff", background: "#061018" },
+  },
+  {
+    name: "Neon",
+    description: "Magenta and cyan, high-energy and best full-frame.",
+    colors: { primary: "#ff3df2", secondary: "#22f0ff", tertiary: "#ffe45e", background: "#07020d" },
+  },
+  {
+    name: "Monochrome",
+    description: "Near grayscale, brightness-led and restrained.",
+    colors: { primary: "#d9dde5", secondary: "#828a98", tertiary: "#f5f0e7", background: "#08090b" },
+  },
 ];
+
+const flowPatterns: Array<{ id: FlowPattern; label: string; description: string }> = [
+  { id: "soft-fold", label: "Soft fold", description: "Slow organic folds for readable backgrounds." },
+  { id: "ribbon", label: "Ribbon sweep", description: "Horizontal bands that bend through the frame." },
+  { id: "cellular", label: "Cellular bloom", description: "Rounded cells and pooled color islands." },
+  { id: "storm", label: "Storm current", description: "Rotating pressure with stronger turbulence." },
+  { id: "glass", label: "Glass caustic", description: "Crossed refraction lines with crisp highlights." },
+];
+
+const builderPresetIds = ["BS-001", "BS-002", "BS-003", "BS-008", "BS-012", "BS-015"];
 
 const modules = [
   ["Base modes", "BS-MOD-BASE", "Full coverage, dark primary, light primary, and transparent overlay each mix color differently."],
@@ -524,13 +564,31 @@ function modeToUniform(mode: BaseMode) {
   return 3;
 }
 
-function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?: boolean }) {
+function flowPatternToUniform(pattern: FlowPattern = "soft-fold") {
+  return flowPatterns.findIndex((flow) => flow.id === pattern);
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const safe = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : "ffffff";
+  const value = Number.parseInt(safe, 16);
+  return [
+    ((value >> 16) & 255) / 255,
+    ((value >> 8) & 255) / 255,
+    (value & 255) / 255,
+  ];
+}
+
+function colorString(colors: CustomColors) {
+  return [colors.primary, colors.secondary, colors.tertiary, colors.background].join(", ");
+}
+
+function ShaderCanvas({ example, hero = false, eager = false }: { example: ShaderExample; hero?: boolean; eager?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isVisible, setIsVisible] = useState(hero);
+  const [isVisible, setIsVisible] = useState(hero || eager);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || hero) return;
+    if (!canvas || hero || eager) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -544,7 +602,7 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
     observer.observe(canvas);
 
     return () => observer.disconnect();
-  }, [hero]);
+  }, [hero, eager]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -599,10 +657,17 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
       octaves: gl.getUniformLocation(program, "uOctaves"),
       grain: gl.getUniformLocation(program, "uGrain"),
       interaction: gl.getUniformLocation(program, "uInteraction"),
+      flowPattern: gl.getUniformLocation(program, "uFlowPattern"),
+      useCustomColors: gl.getUniformLocation(program, "uUseCustomColors"),
+      primaryColor: gl.getUniformLocation(program, "uPrimaryColor"),
+      secondaryColor: gl.getUniformLocation(program, "uSecondaryColor"),
+      tertiaryColor: gl.getUniformLocation(program, "uTertiaryColor"),
+      backgroundColor: gl.getUniformLocation(program, "uBackgroundColor"),
       ripplePos: gl.getUniformLocation(program, "uRipplePos"),
       rippleStart: gl.getUniformLocation(program, "uRippleStart"),
     };
 
+    const colors = example.customColors ?? palettes[example.palette]?.colors ?? palettes[0].colors;
     gl.uniform1i(uniforms.palette, example.palette);
     gl.uniform1i(uniforms.baseMode, modeToUniform(example.base));
     gl.uniform1f(uniforms.scale, example.scale);
@@ -612,6 +677,12 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
     gl.uniform1i(uniforms.octaves, example.octaves);
     gl.uniform1f(uniforms.grain, example.grainStrength);
     gl.uniform1i(uniforms.interaction, example.interaction);
+    gl.uniform1i(uniforms.flowPattern, flowPatternToUniform(example.flowPattern));
+    gl.uniform1i(uniforms.useCustomColors, example.customColors ? 1 : 0);
+    gl.uniform3fv(uniforms.primaryColor, hexToRgb(colors.primary));
+    gl.uniform3fv(uniforms.secondaryColor, hexToRgb(colors.secondary));
+    gl.uniform3fv(uniforms.tertiaryColor, hexToRgb(colors.tertiary));
+    gl.uniform3fv(uniforms.backgroundColor, hexToRgb(colors.background));
 
     const mouseTarget = { x: 0, y: 0 };
     const mouseSmooth = { x: 0, y: 0 };
@@ -649,7 +720,12 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
       }
     };
 
-    const observer = new ResizeObserver(resize);
+    let resizeRaf = 0;
+    const scheduleResize = () => {
+      cancelAnimationFrame(resizeRaf);
+      resizeRaf = requestAnimationFrame(resize);
+    };
+    const observer = new ResizeObserver(scheduleResize);
     observer.observe(canvas);
     resize();
 
@@ -680,6 +756,7 @@ function ShaderCanvas({ example, hero = false }: { example: ShaderExample; hero?
 
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(resizeRaf);
       observer.disconnect();
       canvas.removeEventListener("pointermove", updatePointer);
       canvas.removeEventListener("pointerdown", addRipple);
@@ -717,6 +794,12 @@ uniform float uHue;
 uniform int uOctaves;
 uniform float uGrain;
 uniform int uInteraction;
+uniform int uFlowPattern;
+uniform int uUseCustomColors;
+uniform vec3 uPrimaryColor;
+uniform vec3 uSecondaryColor;
+uniform vec3 uTertiaryColor;
+uniform vec3 uBackgroundColor;
 uniform vec2 uRipplePos[6];
 uniform float uRippleStart[6];
 out vec4 fragColor;
@@ -778,6 +861,13 @@ vec3 namedPalette(float t, int pick, float drift) {
   return palette(t, vec3(0.50, 0.45, 0.55), vec3(0.45, 0.40, 0.50), vec3(1.0), vec3(0.0, 0.15, 0.35) + drift);
 }
 
+vec3 customPalette(float t, vec3 primary, vec3 secondary, vec3 tertiary) {
+  float a = smoothstep(0.08, 0.78, t);
+  float b = smoothstep(0.34, 0.96, sin(t * TAU + uTime * uHue) * 0.5 + 0.5);
+  vec3 firstPass = mix(primary, secondary, a);
+  return mix(firstPass, tertiary, b * 0.55);
+}
+
 vec3 acesFilmic(vec3 x) {
   const float a = 2.51;
   const float b = 0.03;
@@ -814,6 +904,24 @@ void main() {
   vec2 domain = uv * uScale;
   float warpAmt = uWarp;
 
+  if (uFlowPattern == 1) {
+    domain += vec2(sin((uv.y * 2.8 + t * 0.28) * TAU), cos((uv.x * 1.7 - t * 0.18) * TAU)) * 0.16;
+    domain.x *= 1.28;
+    warpAmt *= 0.82;
+  } else if (uFlowPattern == 2) {
+    float cell = sin(length(uv * 2.2) * TAU - t * 1.7);
+    domain += normalize(uv + 1e-4) * cell * 0.18;
+    warpAmt *= 1.08;
+  } else if (uFlowPattern == 3) {
+    float angle = atan(uv.y, uv.x) + t * 0.18;
+    float radius = length(uv);
+    domain += vec2(cos(angle * 2.0), sin(angle * 2.0)) * radius * 0.26;
+    warpAmt *= 1.24;
+  } else if (uFlowPattern == 4) {
+    domain += vec2(sin(uv.y * 8.0 + t), sin(uv.x * 7.0 - t * 0.8)) * 0.045;
+    warpAmt *= 0.64;
+  }
+
   if (uInteraction == 1) {
     domain += uMouse * 0.25;
   } else if (uInteraction == 2) {
@@ -836,16 +944,19 @@ void main() {
   float mask = smoothstep(0.04, 0.78, field);
   mask = pow(mask, 1.38);
   float drift = uTime * uHue;
-  vec3 color = namedPalette(field, uPalette, drift);
+  vec3 color = uUseCustomColors == 1
+    ? customPalette(field, uPrimaryColor, uSecondaryColor, uTertiaryColor)
+    : namedPalette(field, uPalette, drift);
+  vec3 baseColor = uUseCustomColors == 1 ? uBackgroundColor : vec3(0.004, 0.005, 0.009);
   vec3 col;
   float alpha = 1.0;
 
   if (uBaseMode == 1) {
     vec3 glow = color * 0.78 + vec3(0.03, 0.026, 0.04);
     float readableMask = max(mask, 0.13 * smoothstep(-0.25, 0.65, field));
-    col = mix(vec3(0.004, 0.005, 0.009), glow, readableMask);
+    col = mix(baseColor, glow, readableMask);
   } else if (uBaseMode == 2) {
-    vec3 paper = vec3(0.955, 0.95, 0.93);
+    vec3 paper = uUseCustomColors == 1 ? uBackgroundColor : vec3(0.955, 0.95, 0.93);
     vec3 ink = mix(vec3(0.58, 0.50, 0.60), color * 0.82, 0.72);
     col = mix(paper, ink, mask * 0.74);
   } else if (uBaseMode == 3) {
@@ -863,7 +974,8 @@ void main() {
 
   float vignette = clamp(1.0 - 0.28 * dot(uv, uv), 0.35, 1.0);
   if (uBaseMode == 2) {
-    col = mix(vec3(0.955, 0.95, 0.93), col, vignette);
+    vec3 paper = uUseCustomColors == 1 ? uBackgroundColor : vec3(0.955, 0.95, 0.93);
+    col = mix(paper, col, vignette);
   } else {
     col *= vignette;
   }
@@ -898,7 +1010,7 @@ function ExampleCard({ example }: { example: ShaderExample }) {
           </div>
           <div>
             <dt>Palette</dt>
-            <dd>{palettes[example.palette][0]}</dd>
+            <dd>{palettes[example.palette].name}</dd>
           </div>
           <div>
             <dt>Density</dt>
@@ -932,15 +1044,23 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
 
 export default function Home() {
   const [theme, setTheme] = useState<Theme>("light");
-  const [builderBase, setBuilderBase] = useState<BaseMode>("dark-accent");
+  const [builderPreset, setBuilderPreset] = useState("BS-003");
+  const [builderBase, setBuilderBase] = useState<BaseMode>("full-coverage");
   const [builderPalette, setBuilderPalette] = useState(0);
-  const [builderScale, setBuilderScale] = useState(0.75);
-  const [builderWarp, setBuilderWarp] = useState(1.7);
-  const [builderSpeed, setBuilderSpeed] = useState(0.7);
-  const [builderGrain, setBuilderGrain] = useState(0.02);
+  const [builderFlowPattern, setBuilderFlowPattern] = useState<FlowPattern>("soft-fold");
+  const [builderScale, setBuilderScale] = useState(0.95);
+  const [builderWarp, setBuilderWarp] = useState(2.6);
+  const [builderSpeed, setBuilderSpeed] = useState(0.95);
+  const [builderGrain, setBuilderGrain] = useState(0.04);
+  const [grainEnabled, setGrainEnabled] = useState(true);
+  const [builderColors, setBuilderColors] = useState<CustomColors>(palettes[0].colors);
+  const [copiedExport, setCopiedExport] = useState(false);
   const featured = heroExample;
   const readablePresets = examples.slice(0, 2);
   const galleryExamples = examples.slice(0, 9);
+  const builderPresetOptions = builderPresetIds
+    .map((id) => examples.find((example) => example.id === id))
+    .filter((example): example is ShaderExample => Boolean(example));
 
   useEffect(() => {
     const saved = window.localStorage.getItem("shader-atlas-theme");
@@ -958,6 +1078,25 @@ export default function Home() {
     window.localStorage.setItem("shader-atlas-theme", theme);
   }, [theme]);
 
+  function applyBuilderPreset(preset: ShaderExample) {
+    setBuilderPreset(preset.id);
+    setBuilderBase(preset.base);
+    setBuilderPalette(preset.palette);
+    setBuilderFlowPattern(preset.flowPattern ?? "soft-fold");
+    setBuilderScale(preset.scale);
+    setBuilderWarp(preset.warp);
+    setBuilderSpeed(preset.speed);
+    setBuilderGrain(preset.grainStrength);
+    setGrainEnabled(preset.grainStrength > 0);
+    setBuilderColors(palettes[preset.palette]?.colors ?? palettes[0].colors);
+    setCopiedExport(false);
+  }
+
+  function updateBuilderColor(key: keyof CustomColors, value: string) {
+    setBuilderColors((current) => ({ ...current, [key]: value }));
+    setCopiedExport(false);
+  }
+
   const builderExample = useMemo<ShaderExample>(
     () => ({
       id: "CUSTOM-001",
@@ -974,12 +1113,38 @@ export default function Home() {
       speed: builderSpeed,
       hue: 0.018 + builderSpeed * 0.012,
       octaves: builderScale > 1.05 ? 4 : 3,
-      grainStrength: builderGrain,
+      grainStrength: grainEnabled ? builderGrain : 0,
+      flowPattern: builderFlowPattern,
+      customColors: builderColors,
       summary: "Live preview generated from the controls.",
       use: "Copy the config, then ask the skill or any LLM harness to generate the shader.",
     }),
-    [builderBase, builderPalette, builderScale, builderWarp, builderSpeed, builderGrain],
+    [builderBase, builderPalette, builderScale, builderWarp, builderSpeed, builderGrain, grainEnabled, builderFlowPattern, builderColors],
   );
+
+  const exportRecipe = useMemo(() => {
+    const recipe = {
+      id: "CUSTOM-001",
+      sourcePreset: builderPreset,
+      base: builderBase,
+      palette: palettes[builderPalette].name,
+      flowPattern: builderFlowPattern,
+      colors: builderColors,
+      density: Number(builderScale.toFixed(2)),
+      flow: Number(builderWarp.toFixed(2)),
+      speed: Number(builderSpeed.toFixed(2)),
+      grain: {
+        enabled: grainEnabled,
+        strength: Number((grainEnabled ? builderGrain : 0).toFixed(2)),
+      },
+      use: "Paste this into the beautiful-shader skill or any LLM/coding harness.",
+    };
+
+    return `Use the beautiful-shader skill to create a WebGL2 gradient recipe.
+Target: reusable site/app shader that can be rendered inside a bounded section.
+Recipe:
+${JSON.stringify(recipe, null, 2)}`;
+  }, [builderBase, builderColors, builderFlowPattern, builderGrain, builderPalette, builderPreset, builderScale, builderSpeed, grainEnabled]);
 
   return (
     <main>
@@ -1086,43 +1251,145 @@ export default function Home() {
           </p>
         </div>
         <div className="builder-preview">
-          <ShaderCanvas example={builderExample} />
+          <ShaderCanvas example={builderExample} eager />
           <div className="id-pill">{builderExample.id}</div>
         </div>
         <form className="builder-controls">
-          <label>
-            Base mode
-            <select value={builderBase} onChange={(event) => setBuilderBase(event.target.value as BaseMode)}>
-              <option value="dark-accent">Dark accent</option>
-              <option value="light-accent">Light accent</option>
-              <option value="full-coverage">Full coverage</option>
-              <option value="overlay">Overlay</option>
-            </select>
-          </label>
-          <label>
-            Palette
-            <select value={builderPalette} onChange={(event) => setBuilderPalette(Number(event.target.value))}>
-              {palettes.map(([name], index) => (
-                <option key={name} value={index}>{name}</option>
+          <fieldset className="control-group wide">
+            <legend>Presets</legend>
+            <div className="preset-grid">
+              {builderPresetOptions.map((preset) => (
+                <button
+                  type="button"
+                  className={builderPreset === preset.id ? "preset-button is-active" : "preset-button"}
+                  key={preset.id}
+                  onClick={() => applyBuilderPreset(preset)}
+                >
+                  <span>{preset.id}</span>
+                  {preset.title}
+                </button>
               ))}
-            </select>
-          </label>
-          <label>
-            Density <span>{builderScale.toFixed(2)}</span>
-            <input type="range" min="0.35" max="1.55" step="0.05" value={builderScale} onChange={(event) => setBuilderScale(Number(event.target.value))} />
-          </label>
-          <label>
-            Flow <span>{builderWarp.toFixed(2)}</span>
-            <input type="range" min="0.8" max="3.8" step="0.05" value={builderWarp} onChange={(event) => setBuilderWarp(Number(event.target.value))} />
-          </label>
-          <label>
-            Speed <span>{builderSpeed.toFixed(2)}</span>
-            <input type="range" min="0.25" max="1.5" step="0.05" value={builderSpeed} onChange={(event) => setBuilderSpeed(Number(event.target.value))} />
-          </label>
-          <label>
-            Grain <span>{builderGrain.toFixed(2)}</span>
-            <input type="range" min="0" max="0.16" step="0.01" value={builderGrain} onChange={(event) => setBuilderGrain(Number(event.target.value))} />
-          </label>
+            </div>
+          </fieldset>
+
+          <fieldset className="control-group">
+            <legend>Structure</legend>
+            <label>
+              Base mode
+              <select value={builderBase} onChange={(event) => setBuilderBase(event.target.value as BaseMode)}>
+                <option value="dark-accent">Dark accent</option>
+                <option value="light-accent">Light accent</option>
+                <option value="full-coverage">Full coverage</option>
+                <option value="overlay">Overlay</option>
+              </select>
+            </label>
+            <label>
+              Palette
+              <select
+                value={builderPalette}
+                onChange={(event) => {
+                  const next = Number(event.target.value);
+                  setBuilderPalette(next);
+                  setBuilderColors(palettes[next].colors);
+                  setCopiedExport(false);
+                }}
+              >
+                {palettes.map(({ name }, index) => (
+                  <option key={name} value={index}>{name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Flow pattern
+              <select value={builderFlowPattern} onChange={(event) => setBuilderFlowPattern(event.target.value as FlowPattern)}>
+                {flowPatterns.map((pattern) => (
+                  <option key={pattern.id} value={pattern.id}>{pattern.label}</option>
+                ))}
+              </select>
+            </label>
+            <p className="control-note">{flowPatterns.find((pattern) => pattern.id === builderFlowPattern)?.description}</p>
+          </fieldset>
+
+          <fieldset className="control-group">
+            <legend>Motion</legend>
+            <label>
+              Density <span>{builderScale.toFixed(2)}</span>
+              <input type="range" min="0.35" max="1.55" step="0.05" value={builderScale} onChange={(event) => setBuilderScale(Number(event.target.value))} />
+            </label>
+            <label>
+              Flow intensity <span>{builderWarp.toFixed(2)}</span>
+              <input type="range" min="0.8" max="3.8" step="0.05" value={builderWarp} onChange={(event) => setBuilderWarp(Number(event.target.value))} />
+            </label>
+            <label>
+              Speed <span>{builderSpeed.toFixed(2)}</span>
+              <input type="range" min="0.25" max="1.5" step="0.05" value={builderSpeed} onChange={(event) => setBuilderSpeed(Number(event.target.value))} />
+            </label>
+          </fieldset>
+
+          <fieldset className="control-group wide">
+            <legend>Colors</legend>
+            <div className="color-grid" aria-label={`Current colors: ${colorString(builderColors)}`}>
+              {([
+                ["primary", "Primary color"],
+                ["secondary", "Secondary color"],
+                ["tertiary", "Tertiary color"],
+                ["background", "Background color"],
+              ] as Array<[keyof CustomColors, string]>).map(([key, label]) => (
+                <label className="color-control" key={key}>
+                  <span>{label}</span>
+                  <input
+                    type="color"
+                    value={builderColors[key]}
+                    onInput={(event) => updateBuilderColor(key, event.currentTarget.value)}
+                    onChange={(event) => updateBuilderColor(key, event.target.value)}
+                  />
+                  <code>{builderColors[key]}</code>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="control-group">
+            <legend>Grain</legend>
+            <label className="toggle-control">
+              <input
+                type="checkbox"
+                checked={grainEnabled}
+                onChange={(event) => {
+                  setGrainEnabled(event.target.checked);
+                  setCopiedExport(false);
+                }}
+              />
+              <span>Add grain</span>
+            </label>
+            <label>
+              Grain strength <span>{(grainEnabled ? builderGrain : 0).toFixed(2)}</span>
+              <input
+                type="range"
+                min="0"
+                max="0.16"
+                step="0.01"
+                value={builderGrain}
+                disabled={!grainEnabled}
+                onChange={(event) => setBuilderGrain(Number(event.target.value))}
+              />
+            </label>
+          </fieldset>
+
+          <fieldset className="control-group export-panel">
+            <legend>Export recipe</legend>
+            <textarea readOnly value={exportRecipe} aria-label="Export recipe prompt" />
+            <button
+              type="button"
+              className="copy-button"
+              onClick={() => {
+                window.navigator.clipboard?.writeText(exportRecipe);
+                setCopiedExport(true);
+              }}
+            >
+              {copiedExport ? "Copied recipe" : "Copy recipe"}
+            </button>
+          </fieldset>
         </form>
       </section>
 
@@ -1140,7 +1407,7 @@ import { GradientCanvas, presets } from "beautiful-shader";
 Use the beautiful-shader skill.
 Create a WebGL2 gradient using preset BS-001.
 Context: readable landing-page hero.
-Adjust: palette=${palettes[builderPalette][0]}, base=${builderBase}, density=${builderScale.toFixed(2)}, flow=${builderWarp.toFixed(2)}, grain=${builderGrain.toFixed(2)}.`}</pre>
+Adjust: palette=${palettes[builderPalette].name}, base=${builderBase}, flowPattern=${builderFlowPattern}, colors=${colorString(builderColors)}, density=${builderScale.toFixed(2)}, flow=${builderWarp.toFixed(2)}, grain=${(grainEnabled ? builderGrain : 0).toFixed(2)}.`}</pre>
       </section>
 
       <section className="section-heading" id="docs">
