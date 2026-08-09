@@ -1043,16 +1043,21 @@ function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }
 
 export default function ShaderAtlasPage({ view = "home" }: { view?: PageView }) {
   const [theme, setTheme] = useState<Theme>("light");
-  const [builderPreset, setBuilderPreset] = useState("BS-003");
+  const [builderPreset, setBuilderPreset] = useState("CUSTOM-RANDOM");
   const [builderBase, setBuilderBase] = useState<BaseMode>("full-coverage");
-  const [builderPalette, setBuilderPalette] = useState(0);
-  const [builderFlowPattern, setBuilderFlowPattern] = useState<FlowPattern>("soft-fold");
-  const [builderScale, setBuilderScale] = useState(0.95);
-  const [builderWarp, setBuilderWarp] = useState(2.6);
-  const [builderSpeed, setBuilderSpeed] = useState(0.95);
-  const [builderGrain, setBuilderGrain] = useState(0.04);
+  const [builderPalette, setBuilderPalette] = useState(3);
+  const [builderFlowPattern, setBuilderFlowPattern] = useState<FlowPattern>("glass");
+  const [builderScale, setBuilderScale] = useState(0.82);
+  const [builderWarp, setBuilderWarp] = useState(2.35);
+  const [builderSpeed, setBuilderSpeed] = useState(0.78);
+  const [builderGrain, setBuilderGrain] = useState(0.03);
   const [grainEnabled, setGrainEnabled] = useState(true);
-  const [builderColors, setBuilderColors] = useState<CustomColors>(palettes[0].colors);
+  const [builderColors, setBuilderColors] = useState<CustomColors>({
+    primary: "#6c63ff",
+    secondary: "#18e0c8",
+    tertiary: "#ff6aa2",
+    background: "#020307",
+  });
   const [copiedExport, setCopiedExport] = useState(false);
   const featured = heroExample;
   const readablePresets = examples.slice(0, 2);
@@ -1130,7 +1135,7 @@ export default function ShaderAtlasPage({ view = "home" }: { view?: PageView }) 
   const exportRecipe = useMemo(() => {
     const recipe = {
       id: "CUSTOM-001",
-      sourcePreset: builderPreset,
+      sourcePreset: builderPreset === "CUSTOM-RANDOM" ? "random-custom-start" : builderPreset,
       base: builderBase,
       palette: palettes[builderPalette].name,
       flowPattern: builderFlowPattern,
@@ -1264,37 +1269,25 @@ ${JSON.stringify(recipe, null, 2)}`;
         </>
       )}
 
-      {showBuilder && <section className="builder-section page-intro" id="builder">
-        <div className="builder-copy">
-          <p className="eyebrow">Builder</p>
-          <h2>Make your own gradient recipe.</h2>
-          <p>
-            Tune the core shader ingredients, then copy the config into the skill prompt
-            or use it as the shape for a future npm preset.
-          </p>
-        </div>
+      {showBuilder && (
+        <>
+          <section className="builder-heading page-intro" id="builder">
+            <div>
+              <p className="eyebrow">Builder</p>
+              <h2>Make your own gradient recipe.</h2>
+            </div>
+            <p>
+              Start from a custom gradient, tune the structure, motion, colors, and grain,
+              then copy the recipe into the skill prompt or use it as the shape for a future npm preset.
+            </p>
+          </section>
+
+          <section className="builder-section">
         <div className="builder-preview">
           <ShaderCanvas example={builderExample} eager />
           <div className="id-pill">{builderExample.id}</div>
         </div>
         <form className="builder-controls">
-          <fieldset className="control-group wide">
-            <legend>Presets</legend>
-            <div className="preset-grid">
-              {builderPresetOptions.map((preset) => (
-                <button
-                  type="button"
-                  className={builderPreset === preset.id ? "preset-button is-active" : "preset-button"}
-                  key={preset.id}
-                  onClick={() => applyBuilderPreset(preset)}
-                >
-                  <span>{preset.id}</span>
-                  {preset.title}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
           <fieldset className="control-group">
             <legend>Structure</legend>
             <label>
@@ -1399,6 +1392,24 @@ ${JSON.stringify(recipe, null, 2)}`;
             </label>
           </fieldset>
 
+          <fieldset className="control-group wide preset-panel">
+            <legend>Presets</legend>
+            <p className="control-note">Use these as saved starting points after exploring your custom gradient.</p>
+            <div className="preset-grid">
+              {builderPresetOptions.map((preset) => (
+                <button
+                  type="button"
+                  className={builderPreset === preset.id ? "preset-button is-active" : "preset-button"}
+                  key={preset.id}
+                  onClick={() => applyBuilderPreset(preset)}
+                >
+                  <span>{preset.id}</span>
+                  {preset.title}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
           <fieldset className="control-group export-panel">
             <legend>Export recipe</legend>
             <textarea readOnly value={exportRecipe} aria-label="Export recipe prompt" />
@@ -1414,7 +1425,9 @@ ${JSON.stringify(recipe, null, 2)}`;
             </button>
           </fieldset>
         </form>
-      </section>}
+          </section>
+        </>
+      )}
 
       {showCode && <section className="code-section page-intro" id="code">
         <div>
