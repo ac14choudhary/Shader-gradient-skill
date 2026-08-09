@@ -43,13 +43,13 @@ const examples: ShaderExample[] = [
     mood: "calm",
     grain: "dither only",
     interaction: 0,
-    scale: 0.45,
-    warp: 1.1,
-    speed: 0.55,
-    hue: 0.016,
-    octaves: 2,
-    grainStrength: 0,
-    summary: "Dark background as the primary color, with violet and teal bleeding through sparse masks.",
+    scale: 0.62,
+    warp: 1.48,
+    speed: 0.62,
+    hue: 0.018,
+    octaves: 3,
+    grainStrength: 0.012,
+    summary: "Dark background as the primary color, with visible violet and teal motion kept below the text plane.",
     use: "Readable hero sections, editorial landing pages, calm product intros.",
   },
   {
@@ -62,11 +62,11 @@ const examples: ShaderExample[] = [
     mood: "calm",
     grain: "none",
     interaction: 0,
-    scale: 0.58,
-    warp: 1.15,
-    speed: 0.6,
-    hue: 0.014,
-    octaves: 2,
+    scale: 0.72,
+    warp: 1.38,
+    speed: 0.58,
+    hue: 0.012,
+    octaves: 3,
     grainStrength: 0,
     summary: "The light-mode mirror of the dark accent mode, mixing toward an off-white base.",
     use: "Bright SaaS pages, documentation intros, airy portfolio sections.",
@@ -753,19 +753,21 @@ void main() {
   vec2 r;
   float f = warpedFbm(domain, t, warpAmt, uOctaves, q, r);
   float field = f + 0.17 * length(q) + 0.08 * length(r);
-  float mask = smoothstep(0.12, 0.86, field);
-  mask = pow(mask, 1.68);
+  float mask = smoothstep(0.04, 0.78, field);
+  mask = pow(mask, 1.38);
   float drift = uTime * uHue;
   vec3 color = namedPalette(field, uPalette, drift);
   vec3 col;
   float alpha = 1.0;
 
   if (uBaseMode == 1) {
-    vec3 glow = color * 0.62 + vec3(0.02, 0.018, 0.026);
-    col = mix(vec3(0.0), glow, mask);
+    vec3 glow = color * 0.78 + vec3(0.03, 0.026, 0.04);
+    float readableMask = max(mask, 0.13 * smoothstep(-0.25, 0.65, field));
+    col = mix(vec3(0.004, 0.005, 0.009), glow, readableMask);
   } else if (uBaseMode == 2) {
     vec3 paper = vec3(0.955, 0.95, 0.93);
-    col = mix(paper, color * 0.78, mask * 0.86);
+    vec3 ink = mix(vec3(0.58, 0.50, 0.60), color * 0.82, 0.72);
+    col = mix(paper, ink, mask * 0.74);
   } else if (uBaseMode == 3) {
     col = color * 0.8;
     alpha = clamp(mask * 0.78, 0.0, 0.82);
