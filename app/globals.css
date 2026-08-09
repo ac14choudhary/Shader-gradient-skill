@@ -697,6 +697,57 @@ pre {
   border-left: 3px solid var(--green);
 }
 
+.example-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.tooltip-action {
+  position: relative;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 11px;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  font-size: 0.84rem;
+}
+
+.tooltip-action + .tooltip-action {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.tooltip-action::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 4;
+  width: min(260px, 72vw);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.tooltip-action:hover::after,
+.tooltip-action:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .docs-stack {
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);

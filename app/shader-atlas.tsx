@@ -583,6 +583,54 @@ function colorString(colors: CustomColors) {
   return [colors.primary, colors.secondary, colors.tertiary, colors.background].join(", ");
 }
 
+function gradientRecipe(example: ShaderExample) {
+  return {
+    id: example.id,
+    title: example.title,
+    category: example.category,
+    base: example.base,
+    palette: palettes[example.palette].name,
+    flowPattern: example.flowPattern ?? "soft-fold",
+    density: example.density,
+    motion: {
+      scale: example.scale,
+      warp: example.warp,
+      speed: example.speed,
+      hue: example.hue,
+      octaves: example.octaves,
+    },
+    grain: {
+      label: example.grain,
+      strength: example.grainStrength,
+    },
+    interaction: example.interaction,
+    recommendedUse: example.use,
+  };
+}
+
+function gradientCode(example: ShaderExample) {
+  return `import { GradientCanvas, presets } from "beautiful-shader";
+
+<GradientCanvas
+  preset={presets["${example.id}"]}
+  aria-label="${example.title} gradient"
+/>
+
+// Portable recipe
+${JSON.stringify(gradientRecipe(example), null, 2)}`;
+}
+
+function gradientPrompt(example: ShaderExample) {
+  return `Use the beautiful-shader skill.
+Create a WebGL2 gradient using preset ${example.id}.
+Title: ${example.title}.
+Category: ${example.category}.
+Use case: ${example.use}
+Render it as a bounded section or component, not a full-page takeover.
+Keep the shader readable and use this recipe:
+${JSON.stringify(gradientRecipe(example), null, 2)}`;
+}
+
 function ShaderCanvas({ example, hero = false, eager = false }: { example: ShaderExample; hero?: boolean; eager?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -990,6 +1038,15 @@ void main() {
 }`;
 
 function ExampleCard({ example, eager = false }: { example: ShaderExample; eager?: boolean }) {
+  const [copiedAction, setCopiedAction] = useState<"code" | "prompt" | null>(null);
+
+  function copyExample(kind: "code" | "prompt") {
+    const payload = kind === "code" ? gradientCode(example) : gradientPrompt(example);
+    window.navigator.clipboard?.writeText(payload);
+    setCopiedAction(kind);
+    window.setTimeout(() => setCopiedAction(null), 1800);
+  }
+
   return (
     <article className="example-card" id={example.id}>
       <div className={example.base === "overlay" ? "shader-shell checker-shell" : "shader-shell"}>
@@ -1021,6 +1078,26 @@ function ExampleCard({ example, eager = false }: { example: ShaderExample; eager
           </div>
         </dl>
         <p className="usage">{example.use}</p>
+        <div className="example-actions" aria-label={`${example.id} actions`}>
+          <button
+            type="button"
+            className="tooltip-action"
+            data-tooltip="Copy a package-style snippet and portable JSON recipe for this exact gradient."
+            aria-label={`Copy code for ${example.id}`}
+            onClick={() => copyExample("code")}
+          >
+            {copiedAction === "code" ? "Code copied" : "Copy code"}
+          </button>
+          <button
+            type="button"
+            className="tooltip-action"
+            data-tooltip="Copy an LLM-ready prompt that asks any coding harness to recreate this gradient."
+            aria-label={`Copy LLM prompt for ${example.id}`}
+            onClick={() => copyExample("prompt")}
+          >
+            {copiedAction === "prompt" ? "Prompt copied" : "Copy prompt"}
+          </button>
+        </div>
       </div>
     </article>
   );

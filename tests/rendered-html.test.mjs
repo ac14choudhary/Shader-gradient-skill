@@ -54,6 +54,8 @@ test("server-renders the shader atlas shell", async () => {
   assert.match(html, /BS-018/);
   assert.match(html, /BS-DOC-006/);
   assert.match(html, /GradientCanvas/);
+  assert.match(html, /Copy code/);
+  assert.match(html, /Copy prompt/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
 });
 
@@ -101,6 +103,9 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(atlas, /uUseCustomColors/);
   assert.match(atlas, /navigator\.clipboard/);
   assert.match(atlas, /eager=\{view === "gallery" && index < 4\}/);
+  assert.match(atlas, /gradientCode/);
+  assert.match(atlas, /gradientPrompt/);
+  assert.match(atlas, /data-tooltip/);
   assert.match(layout, /title:\s*"Beautiful Shader Atlas"/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.doesNotMatch(page + atlas + layout, /codex-preview|_sites-preview|Starter Project/);
