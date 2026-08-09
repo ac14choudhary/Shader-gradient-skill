@@ -68,18 +68,18 @@ const examples: ShaderExample[] = [
     title: "Light Ink Wash",
     category: "Hero",
     base: "light-accent",
-    palette: 1,
+    palette: 0,
     density: "balanced",
     mood: "calm",
     grain: "none",
     interaction: 0,
-    scale: 0.72,
-    warp: 1.38,
-    speed: 0.58,
-    hue: 0.012,
-    octaves: 3,
+    scale: 0.82,
+    warp: 1.82,
+    speed: 0.64,
+    hue: 0.022,
+    octaves: 4,
     grainStrength: 0,
-    summary: "The light-mode mirror of the dark accent mode, mixing toward an off-white base.",
+    summary: "A light-mode wash with more visible aurora color, still soft enough for text and UI.",
     use: "Bright SaaS pages, documentation intros, airy portfolio sections.",
   },
   {
@@ -425,6 +425,25 @@ const navItems = [
   ["Code", "/code", "code"],
   ["Docs", "/docs", "docs"],
 ];
+
+const startActions = [
+  {
+    id: "skill",
+    title: "Use the skill",
+    description: "Read the skill instructions, then use preset IDs or recipes inside your coding harness.",
+    href: "/docs",
+    cta: "Go to skill",
+  },
+  {
+    id: "builder",
+    title: "Move to builder",
+    description: "Tune palette, motion, grain, and density visually before copying a ready recipe.",
+    href: "/builder",
+    cta: "Open builder",
+  },
+];
+
+const npmInstallCommand = "npm install beautiful-shader";
 
 const useCaseSections: Array<{ category: Category; title: string; copy: string }> = [
   {
@@ -1136,6 +1155,7 @@ export default function ShaderAtlasPage({ view = "home" }: { view?: PageView }) 
     background: "#020307",
   });
   const [copiedExport, setCopiedExport] = useState(false);
+  const [copiedNpm, setCopiedNpm] = useState(false);
   const featured = heroExample;
   const readablePresets = examples.slice(0, 2);
   const galleryExamples = examples.slice(0, 9);
@@ -1182,6 +1202,12 @@ export default function ShaderAtlasPage({ view = "home" }: { view?: PageView }) 
   function updateBuilderColor(key: keyof CustomColors, value: string) {
     setBuilderColors((current) => ({ ...current, [key]: value }));
     setCopiedExport(false);
+  }
+
+  function copyNpmCommand() {
+    window.navigator.clipboard?.writeText(npmInstallCommand);
+    setCopiedNpm(true);
+    window.setTimeout(() => setCopiedNpm(false), 1800);
   }
 
   const builderExample = useMemo<ShaderExample>(
@@ -1305,6 +1331,32 @@ ${JSON.stringify(recipe, null, 2)}`;
               and a short reason to choose it. The first shaders render immediately, and
               the rest start as you browse so the page stays responsive.
             </p>
+          </section>
+
+          <section className="start-options" aria-label="Ways to use the gallery">
+            {startActions.map((action) => (
+              <article className="start-option" key={action.id}>
+                <div>
+                  <p className="eyebrow">{action.title}</p>
+                  <p>{action.description}</p>
+                </div>
+                <div className="start-option-actions">
+                  <a href={action.href}>{action.cta}</a>
+                </div>
+              </article>
+            ))}
+            <article className="start-option npm-option">
+              <div>
+                <p className="eyebrow">Use npm</p>
+                <p>Install the package shape once it is available, then import presets as reusable config.</p>
+              </div>
+              <div className="npm-command-chip">
+                <code>{npmInstallCommand}</code>
+                <button type="button" onClick={copyNpmCommand}>
+                  {copiedNpm ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </article>
           </section>
 
           <section className="gallery-wall" aria-label="Shader preset gallery">
