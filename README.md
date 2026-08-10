@@ -35,7 +35,8 @@ There is also a live preset atlas built from the same skill vocabulary:
 [Beautiful Shader Atlas](https://beautiful-shader-atlas.hkwyjfrmmaqkrvps.chatgpt.site).
 It documents reusable preset IDs, base modes, palette choices, interaction modes, and
 the practical layout lessons that only show up once several shaders are rendered on one
-page.
+page. The atlas now includes an `Organic` family for painterly botanical fields, with
+`BS-019`, `BS-020`, the Botanical palette, and the `painterly-bloom` flow pattern.
 
 ## Repository structure
 
@@ -49,7 +50,7 @@ app/                              # live Beautiful Shader Atlas website
 Use the folder skill for Codex or any harness that expects a skill directory. The
 top-level `beautiful-shader.md` remains for tools that install a single markdown file.
 The package workspace starts with the stable recipe API: typed presets, palettes,
-flow-pattern metadata, and prompt/snippet helpers.
+flow-pattern metadata, and prompt/snippet helpers, including organic painterly recipes.
 
 ## NPM package shape
 

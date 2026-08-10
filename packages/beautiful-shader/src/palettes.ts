@@ -32,4 +32,9 @@ export const palettes: PaletteDefinition[] = [
     description: "Near grayscale, brightness-led and restrained.",
     colors: { primary: "#d9dde5", secondary: "#828a98", tertiary: "#f5f0e7", background: "#08090b" },
   },
+  {
+    name: "Botanical",
+    description: "Deep greens, teal pigment, cream light, and blush accents.",
+    colors: { primary: "#0a6d55", secondary: "#0e9a98", tertiary: "#f4b4aa", background: "#f4e3bf" },
+  },
 ];

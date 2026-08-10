@@ -5,10 +5,11 @@ export type ShaderCategory =
   | "UI"
   | "Art"
   | "Interaction"
+  | "Organic"
   | "Texture"
   | "Utility";
 
-export type FlowPattern = "soft-fold" | "ribbon" | "cellular" | "storm" | "glass";
+export type FlowPattern = "soft-fold" | "ribbon" | "cellular" | "storm" | "glass" | "painterly-bloom";
 
 export type GradientColors = {
   primary: string;

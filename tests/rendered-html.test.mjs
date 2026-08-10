@@ -52,6 +52,9 @@ test("server-renders the shader atlas shell", async () => {
   assert.match(html, /Switch to dark mode/);
   assert.match(html, /BS-001/);
   assert.match(html, /BS-018/);
+  assert.match(html, /BS-019/);
+  assert.match(html, /Painterly Botanical Field/);
+  assert.match(html, /Organic painterly fields/);
   assert.match(html, /BS-DOC-006/);
   assert.match(html, /GradientCanvas/);
   assert.match(html, /Copy code/);
@@ -101,6 +104,7 @@ test("keeps the atlas self-contained and starter-free", async () => {
   assert.match(atlas, /builderExample/);
   assert.match(atlas, /LLM harness/);
   assert.match(atlas, /uFlowPattern/);
+  assert.match(atlas, /painterly-bloom/);
   assert.match(atlas, /uUseCustomColors/);
   assert.match(atlas, /navigator\.clipboard/);
   assert.match(atlas, /eager=\{view === "gallery" && index < 4\}/);

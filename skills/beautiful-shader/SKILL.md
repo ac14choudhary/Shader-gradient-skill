@@ -87,6 +87,7 @@ judgment call to get right.
 | Readable hero preset showcase | No visible grain unless requested | No by default | Slow–moderate | Show dark and light modes in large bounded previews; do not rely on tiny thumbnails to prove readability |
 | Multi-shader gallery / atlas | Usually no visible grain on UI presets | Only on selected examples | Pause or lazy-mount offscreen canvases | Never mount every WebGL canvas at once; browsers can evict early contexts and make top examples appear broken |
 | Standalone generative art / gallery piece (the shader *is* the content) | Yes, visible grain welcome — it adds texture and depth when there's nothing else to look at | Often yes — makes it feel alive and responsive | Faster, more octaves/detail is fine here | Can be bold, saturated, dense |
+| Organic / painterly botanical field | Yes — canvas weave plus dry-brush breakup, but keep motion slow | Usually no | Slow, breathing, non-sliding pigment drift | Botanical palette, `painterly-bloom` flow, layered bloom and petal-like masks |
 | Explicit "film / analog / cinematic" brief | Yes — blue-noise, animated, moderate–strong | Usually no | Any | Any, often warm/desaturated |
 | "Clean / modern / minimal" brief | No | No | Slow, smooth | Dark-primary with colour bleeding through a mask, not full coverage |
 | Data-viz gradient that must not band | Tiny/invisible dither only (1/255) — this is a correctness fix, not a style choice | No | N/A | Whatever the data needs |
@@ -267,7 +268,7 @@ Mode C — see the note inline.
 
 ### 4b — Palette (from Step 1, question 6)
 
-Five named presets, each as the `(a, b, c, d)` inputs to the `palette()` function from
+Six named presets, each as the `(a, b, c, d)` inputs to the `palette()` function from
 Step 3 — drop straight into whichever mode above. `d`'s `uTime` term is the hue-drift
 speed from Step 2; keep it or drop it per the calm/energetic call.
 
@@ -278,6 +279,7 @@ speed from Step 2; keep it or drop it per the calm/energetic call.
 | Ocean / Cool Blue–Teal | `0.35, 0.45, 0.55` | `0.25, 0.3, 0.3` | `1.0, 0.9, 0.8` | `0.5, 0.6, 0.7` | Calm, aquatic, low saturation swing |
 | Neon / Magenta–Cyan | `0.55, 0.4, 0.6` | `0.5, 0.3, 0.55` | `1.4, 1.1, 1.6` | `0.1, 0.55, 0.75` | High-saturation, cyberpunk, best in Mode A |
 | Monochrome / Single-hue Slate | `0.5, 0.5, 0.52` | `0.12, 0.12, 0.13` | `1.0, 1.0, 1.0` | `0.0, 0.0, 0.02` | Near-grayscale, brightness does the work, not hue |
+| Botanical / Painterly Moss | custom stops preferred | custom stops preferred | custom stops preferred | `#0a6d55`, `#0e9a98`, `#f4b4aa`, `#f4e3bf` | Organic moss, teal pigment, cream light, and blush bloom |
 
 **Custom colours** — when the user gives their own colours (hex codes or a description)
 instead of a preset, don't try to reverse-engineer cosine-palette coefficients that hit

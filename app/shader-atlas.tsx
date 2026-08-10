@@ -8,10 +8,11 @@ type Category =
   | "UI"
   | "Art"
   | "Interaction"
+  | "Organic"
   | "Texture"
   | "Utility";
 type Theme = "light" | "dark";
-type FlowPattern = "soft-fold" | "ribbon" | "cellular" | "storm" | "glass";
+type FlowPattern = "soft-fold" | "ribbon" | "cellular" | "storm" | "glass" | "painterly-bloom";
 export type PageView = "home" | "gallery" | "use-cases" | "builder" | "code" | "docs";
 
 type CustomColors = {
@@ -386,6 +387,46 @@ const examples: ShaderExample[] = [
     summary: "A maximal setting that shows how far the skill can push fold, churn, and texture.",
     use: "Standalone art, shader playgrounds, visual identity explorations.",
   },
+  {
+    id: "BS-019",
+    title: "Painterly Botanical Field",
+    category: "Organic",
+    base: "full-coverage",
+    palette: 5,
+    density: "balanced",
+    mood: "botanical",
+    grain: "woven canvas",
+    interaction: 0,
+    scale: 0.74,
+    warp: 2.95,
+    speed: 0.48,
+    hue: 0.012,
+    octaves: 5,
+    grainStrength: 0.11,
+    flowPattern: "painterly-bloom",
+    summary: "Layered teal, moss, cream, and blush blooms with dry-brush texture and a subtle canvas weave.",
+    use: "Organic art direction, garden/editorial heroes, calm brand moments, and painterly backgrounds.",
+  },
+  {
+    id: "BS-020",
+    title: "Abstract Moss Wash",
+    category: "Organic",
+    base: "light-accent",
+    palette: 5,
+    density: "wide",
+    mood: "soft organic",
+    grain: "light canvas",
+    interaction: 0,
+    scale: 0.58,
+    warp: 2.25,
+    speed: 0.36,
+    hue: 0.008,
+    octaves: 4,
+    grainStrength: 0.07,
+    flowPattern: "painterly-bloom",
+    summary: "A quieter paper-first version with organic pigment pools and airy botanical highlights.",
+    use: "Documentation headers, natural wellness pages, editorial section breaks, and light-mode art panels.",
+  },
 ];
 
 const heroExample: ShaderExample = {
@@ -414,6 +455,7 @@ const categories: Array<Category | "All"> = [
   "UI",
   "Art",
   "Interaction",
+  "Organic",
   "Texture",
   "Utility",
 ];
@@ -467,6 +509,11 @@ const useCaseSections: Array<{ category: Category; title: string; copy: string }
     copy: "Pointer follow, repel, click ripple, and hover turbulence modes for playful surfaces.",
   },
   {
+    category: "Organic",
+    title: "Organic painterly fields",
+    copy: "Botanical, brushed, and canvas-like shader recipes for abstract natural motion.",
+  },
+  {
     category: "Texture",
     title: "Texture and grain",
     copy: "Analog and cinematic variations where visible grain is a deliberate creative choice.",
@@ -511,6 +558,11 @@ const palettes: Array<{ name: string; description: string; colors: CustomColors 
     description: "Near grayscale, brightness-led and restrained.",
     colors: { primary: "#d9dde5", secondary: "#828a98", tertiary: "#f5f0e7", background: "#08090b" },
   },
+  {
+    name: "Botanical",
+    description: "Deep greens, teal pigment, cream light, and blush accents.",
+    colors: { primary: "#0a6d55", secondary: "#0e9a98", tertiary: "#f4b4aa", background: "#f4e3bf" },
+  },
 ];
 
 const flowPatterns: Array<{ id: FlowPattern; label: string; description: string }> = [
@@ -519,9 +571,10 @@ const flowPatterns: Array<{ id: FlowPattern; label: string; description: string 
   { id: "cellular", label: "Cellular bloom", description: "Rounded cells and pooled color islands." },
   { id: "storm", label: "Storm current", description: "Rotating pressure with stronger turbulence." },
   { id: "glass", label: "Glass caustic", description: "Crossed refraction lines with crisp highlights." },
+  { id: "painterly-bloom", label: "Painterly bloom", description: "Organic pigment blooms, brushed masks, and a subtle woven-canvas structure." },
 ];
 
-const builderPresetIds = ["BS-001", "BS-002", "BS-003", "BS-008", "BS-012", "BS-015"];
+const builderPresetIds = ["BS-001", "BS-002", "BS-003", "BS-008", "BS-012", "BS-015", "BS-019"];
 
 const modules = [
   ["Base modes", "BS-MOD-BASE", "Full coverage, dark primary, light primary, and transparent overlay each mix color differently."],
@@ -986,6 +1039,14 @@ void main() {
   } else if (uFlowPattern == 4) {
     domain += vec2(sin(uv.y * 8.0 + t), sin(uv.x * 7.0 - t * 0.8)) * 0.045;
     warpAmt *= 0.64;
+  } else if (uFlowPattern == 5) {
+    vec2 brush = vec2(
+      fbm(domain * 1.4 + vec2(t * 0.05, 2.1), 4),
+      fbm(domain * 1.2 + vec2(8.6, -t * 0.04), 4)
+    ) - 0.5;
+    domain += brush * 0.42;
+    domain.y += sin((uv.x * 1.8 + brush.x + t * 0.08) * TAU) * 0.08;
+    warpAmt *= 1.18;
   }
 
   if (uInteraction == 1) {
@@ -1036,6 +1097,29 @@ void main() {
   if (uInteraction == 4) {
     float proximity = smoothstep(0.62, 0.0, length(uv - uMouse));
     col *= 1.0 + proximity * 0.28;
+  }
+
+  if (uFlowPattern == 5) {
+    vec2 weaveUv = gl_FragCoord.xy / max(uResolution.y, 1.0);
+    float weaveX = sin((weaveUv.x + q.x * 0.004) * 1180.0);
+    float weaveY = sin((weaveUv.y + q.y * 0.004) * 980.0);
+    float weave = weaveX * weaveY * 0.5 + 0.5;
+    float dryBrush = smoothstep(0.48, 0.92, fbm(domain * 5.4 + r * 1.3 + t * 0.025, 4));
+    float pigmentBreak = smoothstep(0.24, 0.82, fbm(domain * 12.0 + q * 2.0, 3));
+    float bloom = smoothstep(0.58, 0.96, fbm(domain * 2.2 + r * 1.15 - t * 0.035, 5));
+    float angle = atan(uv.y + r.y * 0.38, uv.x + r.x * 0.28);
+    float radial = smoothstep(1.34, 0.08, length(uv + q * 0.22));
+    float petals = smoothstep(0.72, 0.99, sin(angle * 5.0 + fbm(domain * 2.0, 4) * 3.8) * 0.5 + 0.5) * radial * bloom;
+    vec3 moss = uUseCustomColors == 1 ? uPrimaryColor : vec3(0.02, 0.30, 0.22);
+    vec3 teal = uUseCustomColors == 1 ? uSecondaryColor : vec3(0.00, 0.54, 0.50);
+    vec3 blush = uUseCustomColors == 1 ? uTertiaryColor : vec3(0.95, 0.62, 0.58);
+    vec3 canvas = uUseCustomColors == 1 ? uBackgroundColor : vec3(0.92, 0.80, 0.56);
+    vec3 pigment = mix(moss, teal, bloom);
+    pigment = mix(pigment, blush, petals * 0.68);
+    pigment = mix(canvas, pigment, 0.62 + dryBrush * 0.32);
+    float paintMask = clamp(bloom * 0.32 + dryBrush * pigmentBreak * 0.28 + petals * 0.46, 0.0, 0.78);
+    col = mix(col, pigment, paintMask);
+    col *= 0.91 + weave * 0.12 + pigmentBreak * 0.04;
   }
 
   float vignette = clamp(1.0 - 0.28 * dot(uv, uv), 0.35, 1.0);

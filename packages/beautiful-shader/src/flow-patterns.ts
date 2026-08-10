@@ -12,4 +12,5 @@ export const flowPatterns: FlowPatternDefinition[] = [
   { id: "cellular", label: "Cellular bloom", description: "Rounded cells and pooled color islands." },
   { id: "storm", label: "Storm current", description: "Rotating pressure with stronger turbulence." },
   { id: "glass", label: "Glass caustic", description: "Crossed refraction lines with crisp highlights." },
+  { id: "painterly-bloom", label: "Painterly bloom", description: "Organic pigment blooms, brushed masks, and a subtle woven-canvas structure." },
 ];
